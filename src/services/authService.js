@@ -5,12 +5,17 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
  const register = async( input ) => {
-    const existingUser = await User.finfOne({ email: input.email });
+    const existingUser = await User.findOne({ email: input.email });
     if (existingUser) {
         throw createAppError("User with this email already exists", 400);
     }
     const hash = await bcrypt.hash(input.password, 10);
-    const newUser = new User.create({ ...input, password: hash });
+    const newUser = new User({
+        name: input.name,
+        email: input.email,
+        password: hash,
+    });
+    await newUser.save();
     const output = {
         id: newUser._id,
         name: newUser.name,
