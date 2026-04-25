@@ -11,11 +11,18 @@ export const fetchAllSubreddits = async () => {
 };
 
 export const createNewSubreddit = async (name, description, author) => {
-  const existingSubreddit = await Subreddit.findOne({ name });
+  const sanitizedName = String(name);
+  const sanitizedDescription = String(description);
+
+  const existingSubreddit = await Subreddit.findOne({ name: sanitizedName });
   if (existingSubreddit) {
     throw createAppError("Subreddit with this name already exists", 400);
   }
-  const newSubreddit = new Subreddit({ name, description, author });
+  const newSubreddit = new Subreddit({
+    name: sanitizedName,
+    description: sanitizedDescription,
+    author,
+  });
   await newSubreddit.save();
 
   return newSubreddit;
@@ -27,7 +34,7 @@ export const fetchSubredditWithThreads = async (id) => {
     throw createAppError("Subreddit not found", 404);
   }
   const threads = await Thread.find({ subreddit: id })
-    .populate("author")
+    .populate("author", "name email")
     .sort({ createdAt: -1 });
 
   return { subreddit, threads };
